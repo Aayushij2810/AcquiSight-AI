@@ -1,58 +1,53 @@
-version: '3.9'
+version: "3.9"
 
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: acquisight_db
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-acquisight}
-      POSTGRES_USER: ${POSTGRES_USER:-acquisight_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+      POSTGRES_DB:       acquisight
+      POSTGRES_USER:     acquisight
+      POSTGRES_PASSWORD: acquisight
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-acquisight_user} -d ${POSTGRES_DB:-acquisight}"]
+      test: ["CMD-SHELL", "pg_isready -U acquisight"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # ── Backend (FastAPI) ───────────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: acquisight_backend
     restart: unless-stopped
-    env_file: .env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-acquisight_user}:${POSTGRES_PASSWORD:-change_me_in_production}@db:5432/${POSTGRES_DB:-acquisight}
+      DATABASE_URL: postgresql://acquisight:acquisight@postgres:5432/acquisight
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - "8000:8000"
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
     volumes:
       - ./backend:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
+  # ── Frontend (React → Nginx) ────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: acquisight_frontend
     restart: unless-stopped
     environment:
-      VITE_API_BASE_URL: http://localhost:8000
+      REACT_APP_API_URL: http://localhost:8000
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on:
       - backend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
 
 volumes:
   postgres_data:
-    driver: local

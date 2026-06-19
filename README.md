@@ -2,9 +2,13 @@
 
 > **AI-Powered Deal Screening & Investment Intelligence**
 
-![AcquiSight AI Banner](docs/screenshots/banner.png)
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?logo=fastapi)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://typescriptlang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
-AcquiSight AI is a production-grade private equity deal screening platform that helps analysts rapidly evaluate acquisition targets, generate investment attractiveness scores, assess risks, benchmark comparable companies, and produce professional investment memos — all powered by OpenAI.
+AcquiSight AI is a full-stack private equity deal screening platform that helps analysts rapidly evaluate acquisition targets, generate investment attractiveness scores, assess risks, benchmark comparable companies, and produce professional investment memos — all powered by OpenAI.
 
 ---
 
@@ -12,211 +16,150 @@ AcquiSight AI is a production-grade private equity deal screening platform that 
 
 | Feature | Description |
 |---|---|
-| 📊 **Deal Screener** | Enter company financials and get instant scoring across 6 dimensions |
-| 🧮 **Valuation Engine** | EV, EBITDA multiples, DCF range — computed automatically |
-| ⚡ **Risk Analyser** | Leverage, liquidity, growth, and market risk scores |
-| 🏢 **Comparable Companies** | Industry-specific comps with EV/EBITDA benchmarking |
-| 🤖 **AI Memo Generator** | GPT-4o-powered investment memo in PE analyst style |
-| 📄 **PDF Export** | One-click professional memo export |
-| 🌙 **Dark Dashboard** | Bloomberg/PitchBook-inspired dark analytics UI |
+| **Deal Screening Engine** | Enter 8 financial inputs; get instant investment scoring |
+| **Investment Attractiveness Score** | 0–100 composite with 5 dimension breakdown |
+| **Risk Assessment** | Multi-factor risk scoring with severity-labelled risk factors |
+| **Comparable Company Analysis** | Industry-benchmarked comps table with bear/base/bull EV range |
+| **AI Investment Memo** | GPT-powered 7-section PE-style investment memorandum |
+| **Score Visualisations** | Radar chart + horizontal bar breakdown via Recharts |
+| **Export** | Download investment memo as Markdown |
+| **Dark Dashboard UI** | Bloomberg/PitchBook-inspired dark theme |
+| **Docker Ready** | One-command `docker compose up` deployment |
 
 ---
 
-## 🖥️ Tech Stack
+## 🛠 Tech Stack
 
-**Frontend**
-- React 18 + TypeScript
-- Tailwind CSS v3
-- Recharts
-- React-PDF / html2canvas for export
-
-**Backend**
-- Python 3.11
-- FastAPI
-- Pydantic v2
-- OpenAI Python SDK
-
-**Database**
-- PostgreSQL 15
-
-**Infrastructure**
-- Docker + Docker Compose
-- Environment variable management via `.env`
+**Frontend:** React 18 · TypeScript 5 · Tailwind CSS · Recharts · Lucide Icons  
+**Backend:** Python 3.12 · FastAPI · Pydantic v2 · SQLAlchemy  
+**Database:** PostgreSQL 16  
+**AI:** OpenAI API (`gpt-4o-mini` default, configurable)  
+**DevOps:** Docker · Docker Compose · Nginx  
 
 ---
 
-## 📁 Folder Structure
+## 📁 Project Structure
 
 ```
 acquisight-ai/
-├── frontend/                   # React + TypeScript SPA
-│   ├── src/
-│   │   ├── components/         # Dashboard, ScoreGauge, CompsTable, MemoViewer …
-│   │   ├── pages/              # DealScreener, Portfolio, Settings
-│   │   ├── hooks/              # useScreenDeal, useMemo
-│   │   ├── types/              # TypeScript interfaces
-│   │   └── utils/              # formatCurrency, formatPercent
-│   ├── public/
-│   ├── package.json
-│   └── tailwind.config.ts
 ├── backend/
-│   ├── main.py                 # FastAPI app entrypoint
-│   ├── scoring.py              # Investment scoring engine
-│   ├── valuation.py            # EV & multiple calculations
-│   ├── risk.py                 # Risk scoring module
-│   ├── comps.py                # Comparable company analysis
-│   ├── memo_generator.py       # OpenAI memo generation
-│   ├── models.py               # Pydantic request/response models
-│   ├── database.py             # PostgreSQL connection & ORM
-│   └── routers/
-│       ├── screen.py           # POST /api/screen
-│       ├── memo.py             # POST /api/memo
-│       └── history.py          # GET /api/history
-├── docs/
-│   ├── screenshots/
-│   └── sample_memo.md
+│   ├── main.py            # FastAPI app & routes
+│   ├── scoring.py         # Investment attractiveness scoring
+│   ├── valuation.py       # Enterprise value & financial ratios
+│   ├── risk.py            # Risk score calculation
+│   ├── comps.py           # Comparable company benchmarking
+│   ├── memo_generator.py  # OpenAI memo generation
+│   ├── database.py        # SQLAlchemy models & session
+│   ├── Dockerfile
+│   └── requirements.txt
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── api.ts
+│   │   ├── types.ts
+│   │   ├── utils.ts
+│   │   └── components/
+│   │       ├── Logo.tsx
+│   │       ├── ScreeningForm.tsx
+│   │       ├── ScoreCard.tsx
+│   │       ├── ScoreGauge.tsx
+│   │       ├── FinancialMetrics.tsx
+│   │       ├── CompsTable.tsx
+│   │       ├── RiskPanel.tsx
+│   │       ├── MemoPanel.tsx
+│   │       └── ScoreChart.tsx
+│   ├── Dockerfile
+│   └── nginx.conf
 ├── docker-compose.yml
-├── requirements.txt
 ├── .env.example
-├── .gitignore
-└── LICENSE
+├── requirements.txt
+└── README.md
 ```
 
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Docker & Docker Compose
-- OpenAI API key
+### Option A — Docker (Recommended)
 
-### 1. Clone the repo
 ```bash
-git clone https://github.com/Aayushij2810/acquisight-ai.git
-cd acquisight-ai
-```
-
-### 2. Configure environment
-```bash
+git clone https://github.com/Aayushij2810/AcquiSight-AI.git
+cd AcquiSight-AI
 cp .env.example .env
-# Edit .env — add your OPENAI_API_KEY and DB credentials
+# Edit .env and add your OPENAI_API_KEY
+docker compose up --build
 ```
 
-### 3. Run with Docker
-```bash
-docker-compose up --build
-```
-
-| Service | URL |
+| Service  | URL |
 |---|---|
 | Frontend | http://localhost:3000 |
-| Backend API | http://localhost:8000 |
-| API Docs (Swagger) | http://localhost:8000/docs |
-| PostgreSQL | localhost:5432 |
+| Backend  | http://localhost:8000 |
+| API Docs | http://localhost:8000/docs |
 
-### 4. Manual local setup (no Docker)
+### Option B — Local Development
 
-**Backend**
+**Backend:**
 ```bash
 cd backend
-python -m venv venv && source venv/bin/activate
+python -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r ../requirements.txt
-uvicorn main:app --reload
+cp ../.env.example .env   # add your OPENAI_API_KEY
+uvicorn main:app --reload --port 8000
 ```
 
-**Frontend**
+**Frontend:**
 ```bash
 cd frontend
+cp .env.example .env.local
 npm install
-npm run dev
+npm start
 ```
-
----
-
-## 🔌 API Reference
-
-### `POST /api/screen`
-Screens a company and returns investment scores.
-
-**Request body:**
-```json
-{
-  "company_name": "Acme Corp",
-  "industry": "SaaS",
-  "revenue": 50000000,
-  "ebitda": 12000000,
-  "growth_rate": 28,
-  "debt": 15000000,
-  "cash": 8000000,
-  "country": "United States"
-}
-```
-
-**Response:**
-```json
-{
-  "ebitda_margin": 24.0,
-  "debt_to_ebitda": 1.25,
-  "enterprise_value": 132000000,
-  "investment_score": 84,
-  "risk_score": 31,
-  "recommendation": "Strong Buyout Candidate",
-  "scores": { "growth": 88, "profitability": 79, "leverage": 85, "revenue_quality": 82, "financial_health": 81 },
-  "comps": [ ... ]
-}
-```
-
-### `POST /api/memo`
-Generates an AI-powered investment memo via GPT-4o.
-
-### `GET /api/history`
-Returns previously screened deals from PostgreSQL.
 
 ---
 
 ## 📊 Scoring Methodology
 
-| Score | Weight | Formula |
+### Investment Attractiveness Score (0–100)
+
+| Dimension | Weight | Driver |
 |---|---|---|
-| Growth Score | 25% | Sigmoid curve on revenue growth rate vs industry median |
-| Profitability Score | 25% | EBITDA margin benchmarked against sector quartiles |
-| Leverage Score | 20% | Debt/EBITDA inverted scale (0× = 100, 6×+ = 0) |
-| Revenue Quality Score | 15% | Recurring vs non-recurring revenue proxy |
-| Financial Health Score | 15% | Net debt / cash position ratio |
-| **Investment Attractiveness Score** | **100%** | Weighted composite of all five dimensions |
+| Growth Score | 25 % | YoY revenue growth vs. industry benchmarks |
+| Profitability Score | 25 % | EBITDA margin vs. sector median |
+| Leverage Score | 20 % | Debt/EBITDA penalty curve |
+| Revenue Quality | 15 % | Absolute revenue scale |
+| Financial Health | 15 % | Cash buffer & coverage ratios |
 
-**Recommendation thresholds:**
+### Recommendations
 
-| Score | Recommendation |
-|---|---|
-| 80–100 | 🟢 Strong Buyout Candidate |
-| 65–79 | 🔵 Attractive Growth Investment |
-| 50–64 | 🟡 Requires Further Due Diligence |
-| 35–49 | 🟠 High Risk Opportunity |
-| 0–34 | 🔴 Reject |
+| Score Band | Risk Band | Label |
+|---|---|---|
+| ≥ 75 | Low/Medium | **Strong Buyout Candidate** |
+| ≥ 60 | Any | **Attractive Growth Investment** |
+| ≥ 45 | Medium | **Requires Further Due Diligence** |
+| ≥ 30 | High | **High Risk Opportunity** |
+| < 30 | Any | **Reject** |
 
 ---
 
 ## 🔮 Future Improvements
 
-- [ ] Live data integration (Refinitiv / Bloomberg API)
-- [ ] Portfolio tracker with IRR and MOIC calculations
+- [ ] PDF export with charts embedded via Puppeteer / WeasyPrint
+- [ ] Persistent deal pipeline with PostgreSQL (models ready in `database.py`)
+- [ ] Live comparable data via Bloomberg / Refinitiv API integration
+- [ ] DCF valuation module
+- [ ] User authentication & deal sharing
 - [ ] LBO model builder
-- [ ] ESG scoring module
-- [ ] Multi-user authentication with deal team collaboration
-- [ ] CRM integration (Salesforce / HubSpot)
-- [ ] Natural language deal search ("Find SaaS companies with >30% growth and <3x leverage")
+- [ ] Sector-specific scoring weights
+- [ ] Excel export of full financial model
+
+---
+
+## ⚠️ Disclaimer
+
+AcquiSight AI is a portfolio / educational project. Scores and memos are **not** investment advice. Always conduct thorough due diligence before making investment decisions.
 
 ---
 
 ## 📄 License
 
-MIT — see [LICENSE](LICENSE)
-
----
-
-## 👤 Author
-
-**Aayushi Jain** — [github.com/Aayushij2810](https://github.com/Aayushij2810)
-
-*MSISS @ Trinity College Dublin · Business Analytics · Product Strategy · AI*
+MIT — see [LICENSE](./LICENSE)

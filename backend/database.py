@@ -1,55 +1,51 @@
+"""Database configuration (PostgreSQL via SQLAlchemy).
+
+For production usage:
+  1. Set DATABASE_URL in your .env file.
+  2. Run `alembic upgrade head` to create tables.
+  3. Replace the in-memory _history list in main.py with SQLAlchemy session calls.
 """
-PostgreSQL connection and ORM setup via SQLAlchemy 2.x.
-"""
+from __future__ import annotations
 
 import os
-from sqlalchemy import create_engine, Column, String, Float, Integer, DateTime, JSON, Text
-from sqlalchemy.orm import declarative_base, sessionmaker
-from datetime import datetime, timezone
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, JSON
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from datetime import datetime
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://acquisight_user:change_me@localhost:5432/acquisight",
-)
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://acquisight:acquisight@localhost:5432/acquisight")
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+engine       = create_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base = declarative_base()
 
 
-class ScreenedDeal(Base):
-    """Persisted record of every screened deal."""
-    __tablename__ = "screened_deals"
+class Base(DeclarativeBase):
+    pass
 
-    id = Column(Integer, primary_key=True, index=True)
-    company_name = Column(String(200), nullable=False, index=True)
-    industry = Column(String(100), nullable=False)
-    country = Column(String(100))
-    revenue = Column(Float)
-    ebitda = Column(Float)
-    growth_rate = Column(Float)
-    debt = Column(Float)
-    cash = Column(Float)
-    ebitda_margin = Column(Float)
+
+class DealRecord(Base):
+    """Persisted screening result."""
+    __tablename__ = "deal_records"
+
+    id               = Column(Integer, primary_key=True, index=True)
+    company_name     = Column(String, index=True)
+    industry         = Column(String)
+    investment_score = Column(Float)
+    risk_score       = Column(Float)
+    recommendation   = Column(String)
     enterprise_value = Column(Float)
-    investment_score = Column(Integer)
-    risk_score = Column(Integer)
-    recommendation = Column(String(100))
-    scores_json = Column(JSON)       # stores DimensionScores as dict
-    comps_json = Column(JSON)        # stores CompsResult as dict
-    memo_text = Column(Text, nullable=True)
-    screened_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    raw_result       = Column(JSON)
+    created_at       = Column(DateTime, default=datetime.utcnow)
+
+
+def create_tables():
+    """Create all tables (call on startup in production)."""
+    Base.metadata.create_all(bind=engine)
 
 
 def get_db():
-    """FastAPI dependency — yield a DB session then close it."""
+    """FastAPI dependency: yield a DB session."""
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
-
-def init_db():
-    """Create tables if they do not exist yet."""
-    Base.metadata.create_all(bind=engine)
