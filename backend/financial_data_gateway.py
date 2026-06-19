@@ -30,29 +30,15 @@ from financial_data.providers import (
     FMPProvider,
     YahooProvider,
 )
-from financial_data.config import is_demo_mode
-from financial_data.reference_data import INSTITUTIONAL_REFERENCE
+from financial_data.provider_status import build_provider_connections, get_data_layer_status, record_successful_fetch
 from financial_data.reliability import compute_reliability_score
 
 
 def _should_query_provider(provider, ticker: str) -> bool:
-    """Skip demo enterprise providers when reference data is unavailable for this ticker."""
-    if provider.provider_id in ("yahoo",):
+    """Only query providers that are actually connected."""
+    if provider.provider_id == "yahoo":
         return True
-    if provider.provider_id == "fmp":
-        return provider.is_configured()
-    if not provider.is_configured():
-        return False
-    if is_demo_mode() and ticker.upper() not in INSTITUTIONAL_REFERENCE:
-        import os
-        key_map = {
-            "bloomberg": "BLOOMBERG_API_KEY",
-            "factset": "FACTSET_API_KEY",
-            "capital_iq": "CAPITAL_IQ_API_KEY",
-        }
-        if not os.getenv(key_map.get(provider.provider_id, "")):
-            return False
-    return True
+    return provider.has_credentials()
 
 
 PROVIDERS = [
@@ -65,17 +51,13 @@ PROVIDERS = [
 
 
 def get_provider_status() -> list[dict]:
-    """Return configuration status for all providers (Enterprise Mode dashboard)."""
-    return [
-        {
-            "provider_id": p.provider_id,
-            "provider_label": p.provider_label,
-            "priority": p.priority,
-            "configured": p.is_configured(),
-            "quality_weight": p.provider_quality_weight,
-        }
-        for p in PROVIDERS
-    ]
+    """Return honest connection status for all providers."""
+    return build_provider_connections(PROVIDERS)
+
+
+def get_data_layer_dashboard() -> dict:
+    """Full data-layer status for Settings page."""
+    return get_data_layer_status(PROVIDERS)
 
 
 def fetch_company_intelligence(query: str) -> dict:
@@ -133,6 +115,8 @@ def _build_intelligence_response(query: str, ticker: str, resolved: CompanyMatch
     display_confidence = confidence if reliability_score >= 75 else primary.confidence
     data = primary.data
     assert data is not None
+
+    record_successful_fetch(primary.provider_id, primary.provider_label, query, data.ticker)
 
     fiscal_period = None
     if data.raw_fields:
@@ -195,7 +179,16 @@ def _build_intelligence_response(query: str, ticker: str, resolved: CompanyMatch
             }
             for r in results
         ],
-        "provider_status": get_provider_status(),
+        "provider_status": [
+            {
+                "provider_id": p["provider_id"],
+                "provider_label": p["provider_label"],
+                "priority": p["priority"],
+                "configured": p["connection_state"] == "connected",
+                "quality_weight": p["quality_weight"],
+            }
+            for p in get_provider_status()
+        ],
     }
 
 

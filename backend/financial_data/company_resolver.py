@@ -49,13 +49,21 @@ class CompanyNotFoundError(ValueError):
 
 
 def normalize_query(query: str) -> str:
-    key = query.lower().strip()
-    for suffix in (
-        " corporation", " corp.", " corp", " inc.", " inc", " incorporated",
-        " platforms", " co.", " co", " ltd.", " ltd", " limited", " plc", " holdings",
-    ):
-        key = key.replace(suffix, "")
-    return key.replace(".", "").replace(",", "").strip()
+    """Normalize company name — strip legal suffixes only at end of string."""
+    key = query.lower().strip().replace(".", "").replace(",", "")
+    suffixes = (
+        " corporation", " corp.", " corp", " incorporated", " inc.", " inc",
+        " platforms", " company", " co.", " ltd.", " ltd", " limited", " plc", " holdings",
+    )
+    changed = True
+    while changed:
+        changed = False
+        for suffix in suffixes:
+            if key.endswith(suffix):
+                key = key[: -len(suffix)].strip()
+                changed = True
+                break
+    return key
 
 
 def _compact(key: str) -> str:
@@ -116,7 +124,7 @@ def _search_local(query: str, limit: int = 10) -> list[CompanyMatch]:
                 if key == cand or compact == _compact(cand):
                     best = max(best, 0.95)
                     match_type = "alias" if cand in entry.aliases else "exact_name"
-                elif len(key) >= 3 and (key in cand or cand in key):
+                elif len(key) >= 4 and len(cand) >= 4 and (key in cand or cand in key):
                     best = max(best, 0.88)
                     match_type = "partial_name"
                 else:

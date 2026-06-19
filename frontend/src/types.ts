@@ -162,7 +162,7 @@ export const INDUSTRIES = [
   'Other',
 ] as const;
 
-export type AppView = 'dashboard' | 'screen' | 'portfolio' | 'settings';
+export type AppView = 'dashboard' | 'screen' | 'portfolio' | 'historical' | 'copilot' | 'settings';
 
 export type PortfolioTab =
   | 'overview'
@@ -362,4 +362,82 @@ export interface ProviderStatus {
   priority: number;
   configured: boolean;
   quality_weight: number;
+}
+
+export interface YearlyFinancialPoint {
+  year: number;
+  label: string;
+  revenue?: number | null;
+  ebitda?: number | null;
+  revenue_growth?: number | null;
+  stock_price?: number | null;
+}
+
+export interface HistoricalTrendMetrics {
+  revenue_cagr?: number | null;
+  ebitda_cagr?: number | null;
+  growth_consistency_score: number;
+  revenue_volatility: number;
+  ebitda_volatility: number;
+}
+
+export interface HistoricalTrends {
+  query: string;
+  ticker: string;
+  company_name: string;
+  currency: string;
+  data_source: string;
+  period_label: string;
+  years: YearlyFinancialPoint[];
+  metrics: HistoricalTrendMetrics;
+  last_updated: string;
+}
+
+export interface CopilotSourceMetric {
+  label: string;
+  value: string;
+  company?: string | null;
+  category: string;
+}
+
+export interface CopilotChatResponse {
+  answer: string;
+  intent: string;
+  companies: string[];
+  sources: CopilotSourceMetric[];
+  grounded_in: string[];
+}
+
+export interface ProviderConnectionStatus {
+  provider_id: string;
+  provider_label: string;
+  priority: number;
+  quality_weight: number;
+  category: 'enterprise' | 'public';
+  connection_state: 'connected' | 'available' | 'not_connected';
+  badge: string;
+  subtitle: string;
+  has_credentials: boolean;
+  credential_env_var?: string | null;
+  last_successful_refresh?: string | null;
+}
+
+export interface FallbackProviderStatus {
+  provider_id: string;
+  provider_label: string;
+  status: 'ready' | 'awaiting_credentials' | 'not_connected';
+}
+
+export interface DataLayerStatus {
+  active_provider: {
+    provider_id?: string | null;
+    provider_label: string;
+  };
+  last_successful_refresh?: string | null;
+  last_query?: string | null;
+  last_ticker?: string | null;
+  demo_mode_enabled: boolean;
+  demo_mode_note?: string | null;
+  fallback_providers: FallbackProviderStatus[];
+  providers: ProviderConnectionStatus[];
 }

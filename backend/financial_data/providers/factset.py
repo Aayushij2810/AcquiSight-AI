@@ -3,49 +3,40 @@
 from __future__ import annotations
 
 import os
-from copy import deepcopy
 
 import httpx
 
 from financial_data.base import BaseFinancialProvider, CompanyFinancialSnapshot, ProviderFetchResult
-from financial_data.config import is_demo_mode
-from financial_data.reference_data import INSTITUTIONAL_REFERENCE
 
 
 class FactSetProvider(BaseFinancialProvider):
     provider_id = "factset"
-    provider_label = "FactSet Research Systems"
+    provider_label = "FactSet"
     priority = 2
     base_confidence = "High"
     provider_quality_weight = 0.95
+    credential_env_var = "FACTSET_API_KEY"
 
-    def is_configured(self) -> bool:
-        return bool(os.getenv("FACTSET_API_KEY")) or is_demo_mode()
+    def has_credentials(self) -> bool:
+        return bool(os.getenv("FACTSET_API_KEY"))
 
     def fetch(self, ticker: str, query: str) -> ProviderFetchResult:
-        if not self.is_configured():
-            return self._result(None, error="FactSet API not configured")
+        if not self.has_credentials():
+            return self._result(None, error="FactSet API credentials not configured")
 
         api_key = os.getenv("FACTSET_API_KEY")
-        if api_key:
-            try:
-                with httpx.Client(timeout=8.0) as client:
-                    resp = client.get(
-                        f"https://api.factset.com/content/factset-fundamentals/v1/company/{ticker}",
-                        headers={"Authorization": f"Bearer {api_key}"},
-                    )
-                    if resp.status_code == 200:
-                        data = self._map_factset(resp.json(), ticker)
-                        if data:
-                            return self._result(data, confidence="High")
-            except Exception:
-                pass
-
-        ref = INSTITUTIONAL_REFERENCE.get(ticker.upper())
-        if ref and is_demo_mode():
-            data = deepcopy(ref)
-            data.raw_fields = {"source": "factset_demo_reference"}
-            return self._result(data, confidence="High")
+        try:
+            with httpx.Client(timeout=8.0) as client:
+                resp = client.get(
+                    f"https://api.factset.com/content/factset-fundamentals/v1/company/{ticker}",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                )
+                if resp.status_code == 200:
+                    data = self._map_factset(resp.json(), ticker)
+                    if data:
+                        return self._result(data, confidence="High")
+        except Exception:
+            pass
 
         return self._result(None, error="FactSet data unavailable")
 

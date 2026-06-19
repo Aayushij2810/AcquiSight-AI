@@ -308,6 +308,35 @@ class CompanyResolutionInfo(BaseModel):
     resolved_name: str
 
 
+class YearlyFinancialPoint(BaseModel):
+    year: int
+    label: str
+    revenue: Optional[float] = None
+    ebitda: Optional[float] = None
+    revenue_growth: Optional[float] = None
+    stock_price: Optional[float] = None
+
+
+class HistoricalTrendMetrics(BaseModel):
+    revenue_cagr: Optional[float] = None
+    ebitda_cagr: Optional[float] = None
+    growth_consistency_score: float = 0.0
+    revenue_volatility: float = 0.0
+    ebitda_volatility: float = 0.0
+
+
+class HistoricalTrendsResponse(BaseModel):
+    query: str
+    ticker: str
+    company_name: str
+    currency: str = "USD"
+    data_source: str
+    period_label: str
+    years: list[YearlyFinancialPoint]
+    metrics: HistoricalTrendMetrics
+    last_updated: str
+
+
 class FieldDiscrepancy(BaseModel):
     field: str
     values: dict[str, float]
@@ -329,7 +358,44 @@ class ProviderAttempt(BaseModel):
     confidence: Optional[str] = None
 
 
+class ProviderConnectionStatus(BaseModel):
+    provider_id: str
+    provider_label: str
+    priority: int
+    quality_weight: float
+    category: str  # enterprise | public
+    connection_state: str  # connected | available | not_connected
+    badge: str
+    subtitle: str
+    has_credentials: bool
+    credential_env_var: Optional[str] = None
+    last_successful_refresh: Optional[str] = None
+
+
+class FallbackProviderStatus(BaseModel):
+    provider_id: str
+    provider_label: str
+    status: str  # ready | awaiting_credentials | not_connected
+
+
+class ActiveProviderInfo(BaseModel):
+    provider_id: Optional[str] = None
+    provider_label: str = "None — no fetch yet"
+
+
+class DataLayerStatusResponse(BaseModel):
+    active_provider: ActiveProviderInfo
+    last_successful_refresh: Optional[str] = None
+    last_query: Optional[str] = None
+    last_ticker: Optional[str] = None
+    demo_mode_enabled: bool = False
+    demo_mode_note: Optional[str] = None
+    fallback_providers: list[FallbackProviderStatus]
+    providers: list[ProviderConnectionStatus]
+
+
 class ProviderStatus(BaseModel):
+    """Legacy shape — kept for company lookup responses."""
     provider_id: str
     provider_label: str
     priority: int
@@ -363,4 +429,23 @@ class CompanyIntelligenceResponse(BaseModel):
     cross_validation: Optional[CrossValidationReport] = None
     providers_attempted: list[ProviderAttempt]
     provider_status: list[ProviderStatus]
+
+
+class CopilotSourceMetric(BaseModel):
+    label: str
+    value: str
+    company: Optional[str] = None
+    category: str
+
+
+class CopilotChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=2000)
+
+
+class CopilotChatResponse(BaseModel):
+    answer: str
+    intent: str
+    companies: list[str] = Field(default_factory=list)
+    sources: list[CopilotSourceMetric] = Field(default_factory=list)
+    grounded_in: list[str] = Field(default_factory=list)
 

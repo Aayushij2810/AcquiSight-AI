@@ -7,11 +7,18 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query
 
 from financial_data.company_resolver import CompanyMatch, CompanyNotFoundError, search_companies
-from financial_data_gateway import fetch_company_intelligence, get_provider_status
+from financial_data_gateway import (
+    fetch_company_intelligence,
+    get_data_layer_dashboard,
+    get_provider_status,
+)
+from historical_trends import fetch_historical_trends
 from models import (
     CompanyIntelligenceResponse,
     CompanySearchMatch,
     CompanySearchResponse,
+    DataLayerStatusResponse,
+    HistoricalTrendsResponse,
     ProviderStatus,
 )
 
@@ -34,11 +41,7 @@ def autocomplete_search(
     q: str = Query(..., min_length=1, max_length=100),
     limit: int = Query(8, ge=1, le=20),
 ):
-    """
-    Autocomplete company search — as-you-type discovery.
-
-    Searches local alias cache, Yahoo Finance, NASDAQ directory, and FMP (if configured).
-    """
+    """Autocomplete company search — as-you-type discovery."""
     results = search_companies(q.strip(), limit=limit)
     return CompanySearchResponse(
         query=q.strip(),
@@ -48,11 +51,7 @@ def autocomplete_search(
 
 @router.get("/company/lookup", response_model=CompanyIntelligenceResponse)
 def lookup_company(q: str = Query(..., min_length=1, max_length=100, description="Ticker or company name")):
-    """
-    Retrieve company fundamentals via the multi-provider financial data gateway.
-
-    Flow: User Input → Company Resolver → Ticker → Financial Data → Analysis-ready payload.
-    """
+    """Retrieve company fundamentals via the multi-provider financial data gateway."""
     try:
         payload = fetch_company_intelligence(q)
         return CompanyIntelligenceResponse(**payload)
@@ -70,7 +69,33 @@ def lookup_company(q: str = Query(..., min_length=1, max_length=100, description
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@router.get("/company/historical-trends", response_model=HistoricalTrendsResponse)
+def historical_trends(q: str = Query(..., min_length=1, max_length=100)):
+    """5-year revenue, EBITDA, growth, and share price trends."""
+    try:
+        return HistoricalTrendsResponse(**fetch_historical_trends(q))
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/company/data-layer/status", response_model=DataLayerStatusResponse)
+def data_layer_status():
+    """Honest data-layer connection dashboard for Settings."""
+    return DataLayerStatusResponse(**get_data_layer_dashboard())
+
+
 @router.get("/company/providers", response_model=list[ProviderStatus])
 def list_providers():
-    """Enterprise Mode — show which data providers are configured."""
-    return [ProviderStatus(**p) for p in get_provider_status()]
+    """Legacy provider list — configured reflects actual credentials only."""
+    return [
+        ProviderStatus(
+            provider_id=p["provider_id"],
+            provider_label=p["provider_label"],
+            priority=p["priority"],
+            configured=p["connection_state"] == "connected",
+            quality_weight=p["quality_weight"],
+        )
+        for p in get_provider_status()
+    ]

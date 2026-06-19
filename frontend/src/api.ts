@@ -3,7 +3,10 @@ import {
   AddToPortfolioPayload,
   CompanyIntelligence,
   CompanySearchResponse,
+  CopilotChatResponse,
+  DataLayerStatus,
   DealScreenResponse,
+  HistoricalTrends,
   MemoResponse,
   PortfolioAnalytics,
   PortfolioInsights,
@@ -86,5 +89,20 @@ export const searchCompanies = async (query: string, limit = 8): Promise<Company
 
 export const fetchDataProviders = async (): Promise<ProviderStatus[]> => {
   const { data } = await client.get<ProviderStatus[]>('/api/company/providers');
+  return data;
+};
+
+export const fetchDataLayerStatus = async (): Promise<DataLayerStatus> => {
+  const { data } = await client.get<DataLayerStatus>('/api/company/data-layer/status');
+  return data;
+};
+
+export const fetchHistoricalTrends = async (query: string): Promise<HistoricalTrends> => {
+  const { data } = await client.get<HistoricalTrends>('/api/company/historical-trends', { params: { q: query } });
+  return data;
+};
+
+export const sendCopilotMessage = async (message: string): Promise<CopilotChatResponse> => {
+  const { data } = await client.post<CopilotChatResponse>('/api/copilot/chat', { message }, { timeout: 180_000 });
   return data;
 };

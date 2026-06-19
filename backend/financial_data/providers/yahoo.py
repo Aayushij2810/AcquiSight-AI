@@ -12,8 +12,9 @@ class YahooProvider(BaseFinancialProvider):
     priority = 5
     base_confidence = "Medium"
     provider_quality_weight = 0.65
+    credential_env_var = None
 
-    def is_configured(self) -> bool:
+    def has_credentials(self) -> bool:
         return True
 
     def fetch(self, ticker: str, query: str) -> ProviderFetchResult:

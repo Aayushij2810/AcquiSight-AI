@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Search, Briefcase, Settings, Github } from 'lucide-react';
+import { LayoutDashboard, Search, Briefcase, Settings, Github, LineChart, Sparkles } from 'lucide-react';
 import { Logo } from './Logo';
 import { AppView } from '../types';
 
@@ -12,6 +12,8 @@ interface Props {
 const NAV: { id: AppView; label: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={15} /> },
   { id: 'screen',    label: 'Screen Company', icon: <Search size={15} /> },
+  { id: 'historical', label: 'Historical Analysis', icon: <LineChart size={15} /> },
+  { id: 'copilot', label: 'AcquiSight Copilot', icon: <Sparkles size={15} /> },
   { id: 'portfolio', label: 'Portfolio Mode', icon: <Briefcase size={15} /> },
   { id: 'settings',  label: 'Settings', icon: <Settings size={15} /> },
 ];

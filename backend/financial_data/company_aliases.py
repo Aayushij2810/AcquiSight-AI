@@ -35,7 +35,7 @@ COMPANY_DIRECTORY: list[CompanyEntry] = [
     CompanyEntry("MA", "Mastercard Incorporated", ("mastercard", "ma")),
     CompanyEntry("BABA", "Alibaba Group Holding Limited", ("alibaba", "alibaba group", "baba")),
     CompanyEntry("TTM", "Tata Motors Limited", ("tata motors", "tata", "ttm")),
-    CompanyEntry("TCS", "Tata Consultancy Services Limited", ("tcs", "tata consultancy", "tata consultancy services")),
+    CompanyEntry("TCS.NS", "Tata Consultancy Services Limited", ("tcs", "tata consultancy", "tata consultancy services")),
     CompanyEntry("INFY", "Infosys Limited", ("infosys", "infy")),
     CompanyEntry("WIT", "Wipro Limited", ("wipro", "wit")),
     CompanyEntry("RELIANCE.NS", "Reliance Industries Limited", ("reliance", "reliance industries")),

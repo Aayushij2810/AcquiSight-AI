@@ -58,8 +58,12 @@ class BaseFinancialProvider(ABC):
     provider_quality_weight: float = 0.75
 
     @abstractmethod
+    def has_credentials(self) -> bool:
+        """Return True only when valid API credentials are present."""
+
     def is_configured(self) -> bool:
-        """Return True when API credentials or demo mode enables this provider."""
+        """Alias for has_credentials — used by fetch eligibility checks."""
+        return self.has_credentials()
 
     @abstractmethod
     def fetch(self, ticker: str, query: str) -> ProviderFetchResult:
@@ -84,7 +88,7 @@ class BaseFinancialProvider(ABC):
             provider_id=self.provider_id,
             provider_label=self.provider_label,
             priority=self.priority,
-            available=self.is_configured(),
+            available=self.has_credentials() or self.provider_id == "yahoo",
             provider_quality_weight=self.provider_quality_weight,
             data=data,
             error=error,
