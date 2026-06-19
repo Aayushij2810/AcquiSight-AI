@@ -40,8 +40,13 @@ def opportunity_to_dict(opp: Any) -> dict:
         "notes": opp.notes or "",
         "watchlist": bool(opp.watchlist),
         "ic_decision": opp.ic_decision,
+        "timing_score": opp.timing_score,
+        "best_quarter": opp.best_quarter,
+        "timing_confidence": opp.timing_confidence,
+        "entry_assessment": opp.entry_assessment,
         "screen_result": opp.screen_result_json,
         "memo": opp.memo_json,
+        "timing": opp.timing_json,
     }
 
 

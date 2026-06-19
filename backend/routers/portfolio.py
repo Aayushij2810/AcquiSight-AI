@@ -46,6 +46,7 @@ def add_to_portfolio(payload: AddToPortfolioRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=409, detail=f"{s.company_name} is already in the portfolio.")
 
     priority = compute_priority_score(s.investment_score, s.risk_score)
+    timing = s.timing
     opp = InvestmentOpportunity(
         company_name=s.company_name,
         industry=s.industry,
@@ -65,6 +66,11 @@ def add_to_portfolio(payload: AddToPortfolioRequest, db: Session = Depends(get_d
         ic_decision=ICDecision.PENDING.value,
         screen_result_json=s.model_dump(),
         memo_json=payload.memo.model_dump() if payload.memo else None,
+        timing_score=timing.timing_score,
+        best_quarter=timing.best_quarter,
+        timing_confidence=timing.confidence_level,
+        entry_assessment=timing.entry_window_assessment,
+        timing_json=timing.model_dump(),
     )
     db.add(opp)
     db.commit()
@@ -95,6 +101,7 @@ def list_portfolio(
         "enterprise_value": InvestmentOpportunity.enterprise_value.desc(),
         "growth_rate": InvestmentOpportunity.growth_rate.desc(),
         "date_added": InvestmentOpportunity.date_added.desc(),
+        "timing_score": InvestmentOpportunity.timing_score.desc(),
     }
     query = query.order_by(sort_map.get(sort_by, InvestmentOpportunity.priority_score.desc()))
     return [PortfolioOpportunity(**opportunity_to_dict(o)) for o in query.all()]
@@ -127,17 +134,18 @@ def export_csv(db: Session = Depends(get_db)):
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "Rank", "Company", "Industry", "Investment Score", "Risk Score",
-        "Priority Score", "Enterprise Value", "Growth Rate", "Recommendation",
-        "Status", "IC Decision", "Watchlist", "Date Added", "Notes",
+        "Rank", "Company", "Industry", "Investment Score", "Risk Score", "Timing Score",
+        "Best Quarter", "Confidence", "Entry Assessment", "Priority Score",
+        "Enterprise Value", "Growth Rate", "Recommendation", "Status", "IC Decision",
+        "Watchlist", "Date Added", "Notes",
     ])
     for i, o in enumerate(opps, 1):
         writer.writerow([
             i, o.company_name, o.industry, o.investment_score, o.risk_score,
-            o.priority_score, o.enterprise_value, o.growth_rate, o.recommendation,
-            o.status, o.ic_decision, o.watchlist,
-            o.date_added.isoformat() if o.date_added else "",
-            o.notes or "",
+            o.timing_score or "", o.best_quarter or "", o.timing_confidence or "",
+            o.entry_assessment or "", o.priority_score, o.enterprise_value, o.growth_rate,
+            o.recommendation, o.status, o.ic_decision, o.watchlist,
+            o.date_added.isoformat() if o.date_added else "", o.notes or "",
         ])
     output.seek(0)
     return StreamingResponse(

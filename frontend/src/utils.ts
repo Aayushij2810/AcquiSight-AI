@@ -46,6 +46,14 @@ export const severityColor = (severity: string): string => {
   }
 };
 
+export const timingColor = (score: number): string => {
+  if (score >= 81) return '#22c55e';
+  if (score >= 61) return '#3b82f6';
+  if (score >= 41) return '#eab308';
+  if (score >= 21) return '#f97316';
+  return '#ef4444';
+};
+
 export const recommendationStyle = (color: string): CSSProperties => ({
   backgroundColor: `${color}18`,
   borderColor: `${color}50`,

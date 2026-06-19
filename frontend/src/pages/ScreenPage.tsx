@@ -6,6 +6,7 @@ import { CompsTable } from '../components/CompsTable';
 import { RiskPanel } from '../components/RiskPanel';
 import { MemoPanel } from '../components/MemoPanel';
 import { ValuationMethodologyPanel } from '../components/ValuationMethodologyPanel';
+import { InvestmentTimingPanel } from '../components/InvestmentTimingPanel';
 import { ScoreRadar, ScoreBar } from '../components/ScoreChart';
 import { AddToPortfolioButton } from '../components/portfolio/AddToPortfolioButton';
 import { screenDeal, generateMemo } from '../api';
@@ -118,6 +119,7 @@ export const ScreenPage: React.FC = () => {
             <ScoreBar scores={result.scores} />
           </div>
           <ValuationMethodologyPanel result={result} />
+          <InvestmentTimingPanel timing={result.timing} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <RiskPanel result={result} />
             <CompsTable comps={result.comps} />

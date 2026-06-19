@@ -12,6 +12,7 @@ import { OpportunityComparison } from '../components/portfolio/OpportunityCompar
 import { InvestmentCommitteeView } from '../components/portfolio/InvestmentCommitteeView';
 import { PortfolioInsightsPanel } from '../components/portfolio/PortfolioInsightsPanel';
 import { PortfolioExport } from '../components/portfolio/PortfolioExport';
+import { PortfolioTimingView } from '../components/portfolio/PortfolioTimingView';
 
 const TABS: { id: PortfolioTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -21,6 +22,7 @@ const TABS: { id: PortfolioTab; label: string }[] = [
   { id: 'analytics', label: 'Analytics' },
   { id: 'compare', label: 'Compare' },
   { id: 'ic', label: 'IC Review' },
+  { id: 'timing', label: 'Timing' },
 ];
 
 export const PortfolioPage: React.FC = () => {
@@ -112,6 +114,8 @@ export const PortfolioPage: React.FC = () => {
       {tab === 'ic' && (
         <InvestmentCommitteeView opportunities={opportunities} onDecision={handleICDecision} />
       )}
+
+      {tab === 'timing' && <PortfolioTimingView opportunities={opportunities} />}
     </div>
   );
 };

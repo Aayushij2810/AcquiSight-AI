@@ -6,15 +6,16 @@ interface Props {
   label:    string;
   size?:    number;
   isRisk?:  boolean;
+  getColor?: (score: number) => string;
 }
 
-export const ScoreGauge: React.FC<Props> = ({ score, label, size = 120, isRisk = false }) => {
+export const ScoreGauge: React.FC<Props> = ({ score, label, size = 120, isRisk = false, getColor }) => {
   const r       = (size / 2) - 10;
   const cx      = size / 2;
   const cy      = size / 2;
-  const circumference = Math.PI * r;        // half-circle arc
+  const circumference = Math.PI * r;
   const dashOffset    = circumference * (1 - score / 100);
-  const color   = isRisk ? riskColor(score) : scoreColor(score);
+  const color   = getColor ? getColor(score) : (isRisk ? riskColor(score) : scoreColor(score));
   const rotation = -180;
 
   return (

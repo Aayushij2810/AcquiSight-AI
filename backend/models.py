@@ -131,6 +131,36 @@ class RiskBreakdownItem(BaseModel):
     weighted_contribution: float
 
 
+class QuarterAttractiveness(BaseModel):
+    quarter: str
+    attractiveness_score: int
+    outlook: str
+
+
+class TimingCatalyst(BaseModel):
+    category: str
+    name: str
+    description: str
+
+
+class TimingAnalysis(BaseModel):
+    """Investment Timing Engine output — analytical research, not advice."""
+    timing_score: int
+    status: str
+    entry_window_assessment: str
+    entry_window_reasons: list[str]
+    quarter_analysis: list[QuarterAttractiveness]
+    best_quarter: str
+    positive_catalysts: list[TimingCatalyst]
+    risk_catalysts: list[TimingCatalyst]
+    confidence_level: str
+    confidence_score: float
+    analyst_commentary: str
+    industry_timing_factors: list[str]
+    disclaimer: str
+    score_components: dict[str, float]
+
+
 class DealScreenResponse(BaseModel):
     """Full deal screening response."""
     company_name: str
@@ -150,6 +180,7 @@ class DealScreenResponse(BaseModel):
     risk_factors: list[RiskFactor]
     risk_breakdown: list[RiskBreakdownItem]
     comps: CompsResult
+    timing: TimingAnalysis
 
 
 class MemoRequest(BaseModel):
@@ -226,12 +257,110 @@ class PortfolioOpportunity(BaseModel):
     notes: str
     watchlist: bool
     ic_decision: str
+    timing_score: Optional[int] = None
+    best_quarter: Optional[str] = None
+    timing_confidence: Optional[str] = None
+    entry_assessment: Optional[str] = None
     screen_result: Optional[dict] = None
     memo: Optional[dict] = None
+    timing: Optional[TimingAnalysis] = None
 
 
 class PortfolioInsightsResponse(BaseModel):
     summary: str
     recommendations: list[str]
     generated_at: str
+
+
+# ── Financial Data Layer ──────────────────────────────────────────────────────
+
+class DataProvenance(BaseModel):
+    data_source: str
+    provider_id: str
+    last_updated: str
+    confidence: str
+    reliability_score: int
+    reliability_grade: str
+    fallback_chain: list[str] = Field(default_factory=list)
+    fiscal_period: Optional[str] = None
+    data_freshness: str = "Live market data"
+
+
+class CompanySearchMatch(BaseModel):
+    ticker: str
+    company_name: str
+    exchange: str = ""
+    match_type: str = "search"
+    confidence: float = 0.75
+    source: str = "combined"
+
+
+class CompanySearchResponse(BaseModel):
+    query: str
+    results: list[CompanySearchMatch]
+
+
+class CompanyResolutionInfo(BaseModel):
+    match_type: str
+    confidence: float
+    source: str
+    resolved_ticker: str
+    resolved_name: str
+
+
+class FieldDiscrepancy(BaseModel):
+    field: str
+    values: dict[str, float]
+    max_difference_pct: float
+
+
+class CrossValidationReport(BaseModel):
+    flagged: bool
+    message: str
+    providers_compared: list[str]
+    discrepancies: list[FieldDiscrepancy]
+
+
+class ProviderAttempt(BaseModel):
+    provider_id: str
+    provider_label: str
+    success: bool
+    error: Optional[str] = None
+    confidence: Optional[str] = None
+
+
+class ProviderStatus(BaseModel):
+    provider_id: str
+    provider_label: str
+    priority: int
+    configured: bool
+    quality_weight: float
+
+
+class CompanyIntelligenceResponse(BaseModel):
+    query: str
+    ticker: str
+    company_name: str
+    industry: str
+    sector: str
+    country: str
+    revenue: float
+    ebitda: float
+    net_income: Optional[float] = None
+    cash: float
+    debt: float
+    market_cap: Optional[float] = None
+    enterprise_value: Optional[float] = None
+    revenue_growth: float
+    ebitda_margin: float
+    ev_ebitda_multiple: Optional[float] = None
+    historical_financials: list[dict] = Field(default_factory=list)
+    earnings_dates: list[str] = Field(default_factory=list)
+    consensus_estimates: dict = Field(default_factory=dict)
+    comparable_companies: list[str] = Field(default_factory=list)
+    provenance: DataProvenance
+    resolution: Optional[CompanyResolutionInfo] = None
+    cross_validation: Optional[CrossValidationReport] = None
+    providers_attempted: list[ProviderAttempt]
+    provider_status: list[ProviderStatus]
 

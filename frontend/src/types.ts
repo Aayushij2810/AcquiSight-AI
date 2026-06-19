@@ -82,6 +82,36 @@ export interface DealScreenResponse {
   risk_factors:          RiskFactor[];
   risk_breakdown:        RiskBreakdownItem[];
   comps:                 CompsResult;
+  timing:                TimingAnalysis;
+}
+
+export interface QuarterAttractiveness {
+  quarter:               string;
+  attractiveness_score:  number;
+  outlook:               string;
+}
+
+export interface TimingCatalyst {
+  category:    string;
+  name:        string;
+  description: string;
+}
+
+export interface TimingAnalysis {
+  timing_score:            number;
+  status:                  string;
+  entry_window_assessment: string;
+  entry_window_reasons:    string[];
+  quarter_analysis:        QuarterAttractiveness[];
+  best_quarter:            string;
+  positive_catalysts:      TimingCatalyst[];
+  risk_catalysts:          TimingCatalyst[];
+  confidence_level:        string;
+  confidence_score:        number;
+  analyst_commentary:      string;
+  industry_timing_factors: string[];
+  disclaimer:              string;
+  score_components:        Record<string, number>;
 }
 
 export interface MemoSection {
@@ -141,7 +171,8 @@ export type PortfolioTab =
   | 'watchlist'
   | 'analytics'
   | 'compare'
-  | 'ic';
+  | 'ic'
+  | 'timing';
 
 export const PIPELINE_STAGES = [
   'Sourced',
@@ -171,8 +202,13 @@ export interface PortfolioOpportunity {
   notes: string;
   watchlist: boolean;
   ic_decision: string;
+  timing_score?: number | null;
+  best_quarter?: string | null;
+  timing_confidence?: string | null;
+  entry_assessment?: string | null;
   screen_result?: DealScreenResponse | null;
   memo?: MemoResponse | null;
+  timing?: TimingAnalysis | null;
 }
 
 export interface PortfolioHighlight {
@@ -235,4 +271,95 @@ export interface AddToPortfolioPayload {
   notes?: string;
   watchlist?: boolean;
   memo?: MemoResponse;
+}
+
+export interface DataProvenance {
+  data_source: string;
+  provider_id: string;
+  last_updated: string;
+  confidence: string;
+  reliability_score: number;
+  reliability_grade: string;
+  fallback_chain: string[];
+  fiscal_period?: string | null;
+  data_freshness?: string;
+}
+
+export interface CompanySearchMatch {
+  ticker: string;
+  company_name: string;
+  exchange: string;
+  match_type: string;
+  confidence: number;
+  source: string;
+}
+
+export interface CompanySearchResponse {
+  query: string;
+  results: CompanySearchMatch[];
+}
+
+export interface CompanyResolutionInfo {
+  match_type: string;
+  confidence: number;
+  source: string;
+  resolved_ticker: string;
+  resolved_name: string;
+}
+
+export interface CompanyLookupError {
+  message: string;
+  suggestions: CompanySearchMatch[];
+}
+
+export interface CrossValidationReport {
+  flagged: boolean;
+  message: string;
+  providers_compared: string[];
+  discrepancies: {
+    field: string;
+    values: Record<string, number>;
+    max_difference_pct: number;
+  }[];
+}
+
+export interface CompanyIntelligence {
+  query: string;
+  ticker: string;
+  company_name: string;
+  industry: string;
+  sector: string;
+  country: string;
+  revenue: number;
+  ebitda: number;
+  net_income?: number | null;
+  cash: number;
+  debt: number;
+  market_cap?: number | null;
+  enterprise_value?: number | null;
+  revenue_growth: number;
+  ebitda_margin: number;
+  ev_ebitda_multiple?: number | null;
+  historical_financials: Record<string, unknown>[];
+  earnings_dates: string[];
+  consensus_estimates: Record<string, unknown>;
+  comparable_companies: string[];
+  provenance: DataProvenance;
+  resolution?: CompanyResolutionInfo | null;
+  cross_validation?: CrossValidationReport | null;
+  providers_attempted: {
+    provider_id: string;
+    provider_label: string;
+    success: boolean;
+    error?: string | null;
+    confidence?: string | null;
+  }[];
+}
+
+export interface ProviderStatus {
+  provider_id: string;
+  provider_label: string;
+  priority: number;
+  configured: boolean;
+  quality_weight: number;
 }

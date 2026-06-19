@@ -1,11 +1,14 @@
 import axios from 'axios';
 import {
   AddToPortfolioPayload,
+  CompanyIntelligence,
+  CompanySearchResponse,
   DealScreenResponse,
   MemoResponse,
   PortfolioAnalytics,
   PortfolioInsights,
   PortfolioOpportunity,
+  ProviderStatus,
 } from './types';
 
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
@@ -70,3 +73,18 @@ export const fetchPortfolioInsights = async (): Promise<PortfolioInsights> => {
 };
 
 export const exportPortfolioCsv = (): string => `${BASE_URL}/api/portfolio/export/csv`;
+
+export const lookupCompany = async (query: string): Promise<CompanyIntelligence> => {
+  const { data } = await client.get<CompanyIntelligence>('/api/company/lookup', { params: { q: query } });
+  return data;
+};
+
+export const searchCompanies = async (query: string, limit = 8): Promise<CompanySearchResponse> => {
+  const { data } = await client.get<CompanySearchResponse>('/api/company/search', { params: { q: query, limit } });
+  return data;
+};
+
+export const fetchDataProviders = async (): Promise<ProviderStatus[]> => {
+  const { data } = await client.get<ProviderStatus[]>('/api/company/providers');
+  return data;
+};

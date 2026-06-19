@@ -11,6 +11,7 @@ from valuation import compute_enterprise_value
 from risk import compute_risk_assessment
 from comps import get_comps
 from recommendation import get_recommendation
+from timing_engine import compute_timing_analysis
 from database import get_db, ScreenedDeal
 
 router = APIRouter()
@@ -67,6 +68,22 @@ def screen_deal(payload: DealScreenRequest, db: Session = Depends(get_db)):
             risk_score=risk_score,
         )
 
+        timing = compute_timing_analysis(
+            company_name=payload.company_name,
+            industry=payload.industry.value,
+            revenue=payload.revenue,
+            ebitda=payload.ebitda,
+            growth_rate=payload.growth_rate,
+            ebitda_margin=ebitda_margin,
+            debt_to_ebitda=debt_to_ebitda,
+            enterprise_value=valuation.enterprise_value,
+            investment_score=investment_score,
+            risk_score=risk_score,
+            scores=scores,
+            comps=comps_result,
+            market_cap=payload.market_cap,
+        )
+
         response = DealScreenResponse(
             company_name=payload.company_name,
             industry=payload.industry.value,
@@ -85,6 +102,7 @@ def screen_deal(payload: DealScreenRequest, db: Session = Depends(get_db)):
             risk_factors=risk_factors,
             risk_breakdown=risk_breakdown,
             comps=comps_result,
+            timing=timing,
         )
 
         deal = ScreenedDeal(

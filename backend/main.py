@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 load_dotenv(Path(__file__).resolve().parent / ".env", override=True)
 
 from database import create_tables
+from routers.company_intel import router as company_intel_router
 from routers.history import router as history_router
 from routers.memo import router as memo_router
 from routers.portfolio import router as portfolio_router
@@ -34,6 +35,7 @@ app.add_middleware(
 )
 
 app.include_router(screen_router, prefix="/api", tags=["screen"])
+app.include_router(company_intel_router, prefix="/api", tags=["company-intelligence"])
 app.include_router(memo_router, prefix="/api", tags=["memo"])
 app.include_router(history_router, prefix="/api", tags=["history"])
 app.include_router(portfolio_router, prefix="/api", tags=["portfolio"])

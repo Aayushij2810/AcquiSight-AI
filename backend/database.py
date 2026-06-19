@@ -69,11 +69,36 @@ class InvestmentOpportunity(Base):
     ic_decision = Column(String, default="Pending")
     screen_result_json = Column(JSON)
     memo_json = Column(JSON, nullable=True)
+    timing_score = Column(Integer, index=True)
+    best_quarter = Column(String)
+    timing_confidence = Column(String)
+    entry_assessment = Column(String)
+    timing_json = Column(JSON)
 
 
 def create_tables() -> None:
     """Create all tables (call on startup in production)."""
     Base.metadata.create_all(bind=engine)
+    _migrate_portfolio_columns()
+
+
+def _migrate_portfolio_columns() -> None:
+    """Add timing columns to existing portfolio tables if missing."""
+    from sqlalchemy import text
+
+    migrations = [
+        "ALTER TABLE investment_opportunities ADD COLUMN IF NOT EXISTS timing_score INTEGER",
+        "ALTER TABLE investment_opportunities ADD COLUMN IF NOT EXISTS best_quarter VARCHAR",
+        "ALTER TABLE investment_opportunities ADD COLUMN IF NOT EXISTS timing_confidence VARCHAR",
+        "ALTER TABLE investment_opportunities ADD COLUMN IF NOT EXISTS entry_assessment VARCHAR",
+        "ALTER TABLE investment_opportunities ADD COLUMN IF NOT EXISTS timing_json JSON",
+    ]
+    try:
+        with engine.begin() as conn:
+            for stmt in migrations:
+                conn.execute(text(stmt))
+    except Exception:
+        pass
 
 
 def get_db():
