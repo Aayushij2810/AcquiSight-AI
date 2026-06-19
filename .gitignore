@@ -35,3 +35,4 @@ postgres_data/
 # Secrets
 *.pem
 *.key
+AcquiSight-AI/
