@@ -3,17 +3,21 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# Load backend/.env regardless of the shell's working directory.
+load_dotenv(Path(__file__).resolve().parent / ".env", override=True)
+
 from database import create_tables
 from routers.history import router as history_router
 from routers.memo import router as memo_router
+from routers.portfolio import router as portfolio_router
 from routers.screen import router as screen_router
 
-load_dotenv()
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -32,6 +36,7 @@ app.add_middleware(
 app.include_router(screen_router, prefix="/api", tags=["screen"])
 app.include_router(memo_router, prefix="/api", tags=["memo"])
 app.include_router(history_router, prefix="/api", tags=["history"])
+app.include_router(portfolio_router, prefix="/api", tags=["portfolio"])
 
 
 @app.on_event("startup")

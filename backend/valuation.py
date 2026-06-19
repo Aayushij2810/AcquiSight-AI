@@ -1,87 +1,80 @@
 """
 AcquiSight AI — Valuation Engine
-EV/EBITDA multiples by industry with bear / base / bull scenario ranges.
-Imported by routers/screen.py via:
-  from valuation import compute_valuation
+
+Uses ONE methodology per deal (never blended):
+  • Market-Based:        EV = Market Cap + Total Debt − Cash
+  • Comparable Company:  EV = EBITDA × Industry EV/EBITDA Multiple
 """
 
-# ── INDUSTRY MULTIPLE LOOKUP TABLE ───────────────────────────────────────────
-# Multiples are blended EV/EBITDA benchmarks sourced from public market data.
-# Bear = 25th pct, Base = median, Bull = 75th pct of peer group.
+from __future__ import annotations
 
-MULTIPLES: dict[str, dict] = {
-    "SaaS":             {"bear": 14, "base": 22, "bull": 35},
-    "Fintech":          {"bear": 12, "base": 18, "bull": 28},
-    "Healthcare":       {"bear": 10, "base": 14, "bull": 20},
-    "Manufacturing":    {"bear": 6,  "base": 9,  "bull": 12},
-    "Consumer":         {"bear": 7,  "base": 10, "bull": 14},
-    "Energy":           {"bear": 4,  "base": 6,  "bull": 9},
-    "Real Estate":      {"bear": 8,  "base": 12, "bull": 16},
-    "Technology":       {"bear": 12, "base": 18, "bull": 30},
-    "Retail":           {"bear": 5,  "base": 8,  "bull": 11},
-    "Other":            {"bear": 7,  "base": 10, "bull": 14},
-}
-
-# Revenue multiples as secondary cross-check (EV/Revenue)
-REVENUE_MULTIPLES: dict[str, dict] = {
-    "SaaS":             {"bear": 5,   "base": 8,   "bull": 14},
-    "Fintech":          {"bear": 3,   "base": 6,   "bull": 10},
-    "Healthcare":       {"bear": 1.5, "base": 3,   "bull": 5},
-    "Manufacturing":    {"bear": 0.6, "base": 1.0, "bull": 1.6},
-    "Consumer":         {"bear": 0.8, "base": 1.5, "bull": 2.5},
-    "Energy":           {"bear": 0.4, "base": 0.8, "bull": 1.4},
-    "Real Estate":      {"bear": 1.5, "base": 3.0, "bull": 5.5},
-    "Technology":       {"bear": 3,   "base": 6,   "bull": 12},
-    "Retail":           {"bear": 0.3, "base": 0.6, "bull": 1.0},
-    "Other":            {"bear": 0.8, "base": 1.8, "bull": 3.2},
-}
+from models import ValuationMethodology
 
 
-def compute_valuation(ebitda: float, revenue: float, industry: str) -> float:
+def _fmt_usd(value: float) -> str:
+    if abs(value) >= 1_000_000_000:
+        return f"${value / 1_000_000_000:.2f}B"
+    if abs(value) >= 1_000_000:
+        return f"${value / 1_000_000:.1f}M"
+    return f"${value:,.0f}"
+
+
+def compute_enterprise_value(
+    ebitda: float,
+    debt: float,
+    cash: float,
+    industry: str,
+    market_cap: float | None = None,
+    base_multiple: float | None = None,
+) -> ValuationMethodology:
     """
-    Return base-case Enterprise Value (USD) using a blended
-    60% EV/EBITDA + 40% EV/Revenue approach.
-
-    Args:
-        ebitda:   LTM EBITDA in USD
-        revenue:  LTM Revenue in USD
-        industry: Industry string matching the Industry enum values
-
-    Returns:
-        Enterprise Value (float, USD)
+    Return enterprise value using a single, disclosed methodology.
     """
-    em = MULTIPLES.get(industry, MULTIPLES["Other"])
-    rm = REVENUE_MULTIPLES.get(industry, REVENUE_MULTIPLES["Other"])
+    if market_cap is not None and market_cap > 0:
+        ev = market_cap + debt - cash
+        return ValuationMethodology(
+            method_used="Market-Based Valuation",
+            enterprise_value=round(ev, 2),
+            inputs_used=[
+                f"Market Capitalization: {_fmt_usd(market_cap)}",
+                f"Total Debt: {_fmt_usd(debt)}",
+                f"Cash & Equivalents: {_fmt_usd(cash)}",
+            ],
+            multiples_used=["N/A — market price observed directly"],
+            formulas_used=[
+                "EV = Equity Value (Market Cap) + Total Debt − Cash",
+                f"EV = {_fmt_usd(market_cap)} + {_fmt_usd(debt)} − {_fmt_usd(cash)} = {_fmt_usd(ev)}",
+            ],
+            assumptions_used=[
+                "Public market capitalization reflects current equity value.",
+                "Debt and cash are per the latest reported balance sheet.",
+                "No control premium or minority discount applied.",
+            ],
+        )
 
-    ev_ebitda_base = ebitda * em["base"]
-    ev_revenue_base = revenue * rm["base"]
+    if ebitda <= 0:
+        raise ValueError("EBITDA must be positive for comparable-company valuation.")
 
-    # Blended base-case EV
-    blended_ev = ev_ebitda_base * 0.60 + ev_revenue_base * 0.40
-    return round(blended_ev, 2)
+    multiple = base_multiple if base_multiple is not None else 10.0
+    ev = ebitda * multiple
 
-
-def compute_valuation_range(ebitda: float, revenue: float, industry: str) -> dict:
-    """
-    Return bear / base / bull EV range using both multiples.
-    Useful for frontend chart rendering.
-
-    Returns:
-        {"bear": float, "base": float, "bull": float}
-    """
-    em = MULTIPLES.get(industry, MULTIPLES["Other"])
-    rm = REVENUE_MULTIPLES.get(industry, REVENUE_MULTIPLES["Other"])
-
-    return {
-        "bear": round(ebitda * em["bear"] * 0.6 + revenue * rm["bear"] * 0.4, 2),
-        "base": round(ebitda * em["base"] * 0.6 + revenue * rm["base"] * 0.4, 2),
-        "bull": round(ebitda * em["bull"] * 0.6 + revenue * rm["bull"] * 0.4, 2),
-    }
-
-
-def get_multiples_for_industry(industry: str) -> dict:
-    """Expose EV/EBITDA multiples for a given industry (used in comps table)."""
-    return {
-        "ev_ebitda": MULTIPLES.get(industry, MULTIPLES["Other"]),
-        "ev_revenue": REVENUE_MULTIPLES.get(industry, REVENUE_MULTIPLES["Other"]),
-    }
+    return ValuationMethodology(
+        method_used="Comparable Company Valuation",
+        enterprise_value=round(ev, 2),
+        inputs_used=[
+            f"LTM EBITDA: {_fmt_usd(ebitda)}",
+            f"Industry: {industry}",
+            f"Peer Group Average EV/EBITDA: {multiple:.1f}x",
+        ],
+        multiples_used=[f"Base Case EV/EBITDA Multiple: {multiple:.1f}x"],
+        formulas_used=[
+            "EV = EBITDA × Industry EV/EBITDA Multiple",
+            f"EV = {_fmt_usd(ebitda)} × {multiple:.1f}x = {_fmt_usd(ev)}",
+        ],
+        assumptions_used=[
+            "Market capitalization unavailable; public trading comps used as proxy.",
+            "Peer group reflects same-industry public companies (LTM multiples).",
+            "Base case uses the arithmetic mean of peer EV/EBITDA multiples.",
+            "No synergy, control, or liquidity adjustments applied.",
+        ],
+    )

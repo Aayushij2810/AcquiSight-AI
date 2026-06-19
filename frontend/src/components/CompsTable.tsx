@@ -8,19 +8,21 @@ export const CompsTable: React.FC<Props> = ({ comps }) => (
   <div className="card fade-in-up">
     <div className="flex items-center justify-between mb-4">
       <h2 className="text-base font-semibold text-slate-200">Comparable Companies</h2>
-      <span className="text-xs text-slate-500">Avg. {comps.industry_avg_multiple.toFixed(1)}x EV/EBITDA</span>
+      <span className="text-xs text-slate-500">
+        Low {comps.bear_multiple.toFixed(1)}x · Avg {comps.base_multiple.toFixed(1)}x · High {comps.bull_multiple.toFixed(1)}x
+      </span>
     </div>
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-surface-border">
-            {['Company','EV/EBITDA','EBITDA Margin','Revenue Growth'].map(h => (
+            {['Company', 'EV/EBITDA', 'EBITDA Margin', 'Revenue Growth'].map(h => (
               <th key={h} className="text-left py-2.5 px-3 label first:pl-0">{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {comps.companies.map((c, i) => (
+          {comps.companies.map(c => (
             <tr
               key={c.name}
               className="border-b border-surface-border/50 hover:bg-surface-raised/50 transition-colors"
@@ -42,9 +44,9 @@ export const CompsTable: React.FC<Props> = ({ comps }) => (
         </tbody>
         <tfoot>
           <tr className="border-t-2 border-surface-border">
-            <td className="pt-3 pl-0 font-semibold text-slate-300">Industry Average</td>
+            <td className="pt-3 pl-0 font-semibold text-slate-300">Peer Average</td>
             <td className="pt-3 px-3 tabular-nums font-mono font-semibold text-brand-300">
-              {comps.industry_avg_multiple.toFixed(1)}x
+              {comps.base_multiple.toFixed(1)}x
             </td>
             <td className="pt-3 px-3 tabular-nums text-slate-400">—</td>
             <td className="pt-3 px-3 tabular-nums text-slate-400">—</td>
@@ -53,18 +55,17 @@ export const CompsTable: React.FC<Props> = ({ comps }) => (
       </table>
     </div>
 
-    {/* Implied EV summary */}
-    <div className="mt-4 grid grid-cols-3 gap-3">
-      {[
-        { label: 'Bear Case EV',  val: fmt.usdM(comps.ev_range_low) },
-        { label: 'Base Case EV',  val: fmt.usdM(comps.estimated_ev) },
-        { label: 'Bull Case EV',  val: fmt.usdM(comps.ev_range_high) },
-      ].map(item => (
-        <div key={item.label} className="bg-surface-raised rounded-lg p-3 text-center">
-          <p className="label mb-1">{item.label}</p>
-          <p className="text-sm font-semibold tabular-nums text-slate-100">{item.val}</p>
-        </div>
-      ))}
+    <div className="mt-4 space-y-2">
+      <p className="label">Comparable Valuation Scenarios</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {comps.cases.map(item => (
+          <div key={item.label} className="bg-surface-raised rounded-lg p-3">
+            <p className="label mb-1">{item.label}</p>
+            <p className="text-sm font-semibold tabular-nums text-slate-100">{fmt.usdM(item.enterprise_value)}</p>
+            <p className="text-xs font-mono text-slate-500 mt-1.5">{item.calculation}</p>
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 );

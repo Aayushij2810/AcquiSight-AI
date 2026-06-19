@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+
 export const fmt = {
   usd: (v: number, decimals = 0) =>
     new Intl.NumberFormat('en-US', {
@@ -28,9 +30,10 @@ export const scoreColor = (score: number): string => {
 };
 
 export const riskColor = (score: number): string => {
-  if (score <= 25) return '#22c55e';
-  if (score <= 50) return '#3b82f6';
-  if (score <= 70) return '#f97316';
+  if (score <= 20) return '#22c55e';
+  if (score <= 40) return '#3b82f6';
+  if (score <= 60) return '#eab308';
+  if (score <= 80) return '#f97316';
   return '#ef4444';
 };
 
@@ -42,3 +45,9 @@ export const severityColor = (severity: string): string => {
     default:         return 'bg-green-500/15 text-green-400 border-green-500/30';
   }
 };
+
+export const recommendationStyle = (color: string): CSSProperties => ({
+  backgroundColor: `${color}18`,
+  borderColor: `${color}50`,
+  color,
+});

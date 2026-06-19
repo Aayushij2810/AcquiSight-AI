@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 from datetime import datetime
 
-from sqlalchemy import JSON, Column, DateTime, Float, Integer, String, create_engine
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, Text, create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 DATABASE_URL = os.getenv(
@@ -42,6 +42,33 @@ class ScreenedDeal(Base):
     scores_json = Column(JSON)
     comps_json = Column(JSON)
     screened_at = Column(DateTime, default=datetime.utcnow)
+
+
+class InvestmentOpportunity(Base):
+    """Portfolio pipeline opportunity."""
+
+    __tablename__ = "investment_opportunities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    company_name = Column(String, index=True)
+    industry = Column(String, index=True)
+    revenue = Column(Float)
+    ebitda = Column(Float)
+    growth_rate = Column(Float)
+    debt = Column(Float)
+    cash = Column(Float)
+    investment_score = Column(Integer)
+    risk_score = Column(Integer)
+    recommendation = Column(String)
+    enterprise_value = Column(Float)
+    priority_score = Column(Float, index=True)
+    date_added = Column(DateTime, default=datetime.utcnow, index=True)
+    status = Column(String, default="Screening", index=True)
+    notes = Column(Text, default="")
+    watchlist = Column(Boolean, default=False, index=True)
+    ic_decision = Column(String, default="Pending")
+    screen_result_json = Column(JSON)
+    memo_json = Column(JSON, nullable=True)
 
 
 def create_tables() -> None:

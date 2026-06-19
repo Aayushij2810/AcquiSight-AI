@@ -18,6 +18,15 @@ except ImportError:
 from models import DealScreenResponse, MemoResponse, MemoSection
 
 
+def _is_valid_api_key(api_key: str | None) -> bool:
+    if not api_key:
+        return False
+    normalized = api_key.strip()
+    if normalized in {"", "sk-your-key-here"}:
+        return False
+    return normalized.startswith("sk-") and len(normalized) > 20
+
+
 # ── PROMPT BUILDER ────────────────────────────────────────────────────────────
 
 def _build_prompt(screen_result: DealScreenResponse, analyst_notes: Optional[str]) -> str:
@@ -36,22 +45,26 @@ financial audience. Reference specific numbers from the data provided.
 - EBITDA Margin: {s.ebitda_margin:.1f}%
 - Net Debt: ${s.net_debt:,.0f}
 - Debt/EBITDA: {f"{s.debt_to_ebitda:.1f}x" if s.debt_to_ebitda else "N/A"}
-- Enterprise Value (base): ${s.enterprise_value:,.0f}
+- Enterprise Value: ${s.enterprise_value:,.0f} ({s.valuation.method_used})
 - Investment Score: {s.investment_score}/100
-- Risk Score: {s.risk_score}/100
+- Risk Score: {s.risk_score}/100 ({s.risk_label})
 - Recommendation: {s.recommendation}
 
-## Comparable Companies (peers: {comps_names})
-- Industry Avg EV/EBITDA: {s.comps.industry_avg_multiple:.1f}x
-- Implied EV (avg multiple): ${s.comps.estimated_ev:,.0f}
-- EV Range: ${s.comps.ev_range_low:,.0f} – ${s.comps.ev_range_high:,.0f}
+## Valuation Methodology
+- Method: {s.valuation.method_used}
+- Formulas: {'; '.join(s.valuation.formulas_used)}
 
-## Score Breakdown
-- Growth Score: {s.scores.growth}/100
-- Profitability Score: {s.scores.profitability}/100
-- Leverage Score: {s.scores.leverage}/100
-- Revenue Quality Score: {s.scores.revenue_quality}/100
-- Financial Health Score: {s.scores.financial_health}/100
+## Comparable Companies (peers: {comps_names})
+- Bear / Base / Bull Multiples: {s.comps.bear_multiple:.1f}x / {s.comps.base_multiple:.1f}x / {s.comps.bull_multiple:.1f}x
+- Bear Case EV: ${s.comps.ev_range_low:,.0f}
+- Base Case EV: ${s.comps.estimated_ev:,.0f}
+- Bull Case EV: ${s.comps.ev_range_high:,.0f}
+
+## Score Breakdown (Weighted)
+{chr(10).join(f'- {b.dimension}: {b.formula}' for b in s.score_breakdown)}
+
+## Risk Drivers
+{chr(10).join(f'- {f.name} ({f.severity}): {f.description}' for f in s.risk_factors[:5])}
 {notes_block}
 
 ---
@@ -233,14 +246,15 @@ async def generate_memo(
     """
     api_key = os.getenv("OPENAI_API_KEY")
 
-    if not api_key or not OPENAI_AVAILABLE:
+    if not _is_valid_api_key(api_key) or not OPENAI_AVAILABLE:
         return _template_memo(screen_result)
 
     client = AsyncOpenAI(api_key=api_key)
     prompt = _build_prompt(screen_result, analyst_notes)
+    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
     response = await client.chat.completions.create(
-        model="gpt-4o",
+        model=model,
         messages=[
             {
                 "role": "system",

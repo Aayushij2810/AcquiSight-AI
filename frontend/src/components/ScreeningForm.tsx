@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown } from 'lucide-react';
-import { ScreeningFormData } from '../types';
-
-const INDUSTRIES = [
-  'SaaS','Fintech','Healthcare','Manufacturing',
-  'Consumer','Energy','Real Estate','Technology','Retail','Other',
-];
+import { INDUSTRIES, ScreeningFormData } from '../types';
 
 const SAMPLE: ScreeningFormData = {
   company_name: 'Acme Cloud Software',
@@ -16,6 +11,19 @@ const SAMPLE: ScreeningFormData = {
   debt:         '45000000',
   cash:         '12000000',
   country:      'United States',
+  market_cap:   '',
+};
+
+const MEGA_CAP_SAMPLE: ScreeningFormData = {
+  company_name: 'Microsoft',
+  industry:     'Technology',
+  revenue:      '281000000000',
+  ebitda:       '150000000000',
+  growth_rate:  '15',
+  debt:         '65000000000',
+  cash:         '79000000000',
+  country:      'United States',
+  market_cap:   '3100000000000',
 };
 
 interface Props {
@@ -33,10 +41,11 @@ export const ScreeningForm: React.FC<Props> = ({ onSubmit, loading }) => {
   const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSubmit(form); };
 
   const Field = ({
-    label, name, type = 'text', placeholder, prefix,
+    label, name, type = 'text', placeholder, prefix, required = true, hint,
   }: {
     label: string; name: keyof ScreeningFormData;
     type?: string; placeholder?: string; prefix?: string;
+    required?: boolean; hint?: string;
   }) => (
     <div className="flex flex-col gap-1.5">
       <label className="label">{label}</label>
@@ -52,9 +61,10 @@ export const ScreeningForm: React.FC<Props> = ({ onSubmit, loading }) => {
           value={form[name]}
           onChange={set(name)}
           placeholder={placeholder}
-          required
+          required={required}
         />
       </div>
+      {hint && <p className="text-xs text-slate-500">{hint}</p>}
     </div>
   );
 
@@ -62,17 +72,26 @@ export const ScreeningForm: React.FC<Props> = ({ onSubmit, loading }) => {
     <form onSubmit={handleSubmit} className="card fade-in-up">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-base font-semibold text-slate-200">Deal Input</h2>
-        <button
-          type="button"
-          className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
-          onClick={() => setForm(SAMPLE)}
-        >
-          Load Sample
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+            onClick={() => setForm(SAMPLE)}
+          >
+            Load Sample
+          </button>
+          <button
+            type="button"
+            className="text-xs text-slate-400 hover:text-slate-300 transition-colors"
+            onClick={() => setForm(MEGA_CAP_SAMPLE)}
+          >
+            Load Microsoft
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Company Name"   name="company_name" placeholder="Acme Corp" />
+        <Field label="Company Name" name="company_name" placeholder="Acme Corp" />
 
         <div className="flex flex-col gap-1.5">
           <label className="label">Industry</label>
@@ -84,12 +103,20 @@ export const ScreeningForm: React.FC<Props> = ({ onSubmit, loading }) => {
           </div>
         </div>
 
-        <Field label="Revenue (USD)"    name="revenue"     prefix="$" placeholder="85000000" />
-        <Field label="EBITDA (USD)"     name="ebitda"      prefix="$" placeholder="22000000" />
-        <Field label="YoY Growth Rate" name="growth_rate" type="number" placeholder="28" />
-        <Field label="Total Debt (USD)" name="debt"        prefix="$" placeholder="45000000" />
-        <Field label="Cash (USD)"       name="cash"        prefix="$" placeholder="12000000" />
-        <Field label="Country"          name="country"     placeholder="United States" />
+        <Field label="Revenue (USD)"     name="revenue"     prefix="$" placeholder="85000000" />
+        <Field label="EBITDA (USD)"      name="ebitda"      prefix="$" placeholder="22000000" />
+        <Field label="YoY Growth Rate (%)" name="growth_rate" type="number" placeholder="28" />
+        <Field label="Total Debt (USD)"  name="debt"        prefix="$" placeholder="45000000" />
+        <Field label="Cash (USD)"        name="cash"        prefix="$" placeholder="12000000" />
+        <Field
+          label="Market Cap (USD) — Optional"
+          name="market_cap"
+          prefix="$"
+          placeholder="3100000000000"
+          required={false}
+          hint="Public companies only. Uses Market-Based Valuation: EV = Market Cap + Debt − Cash."
+        />
+        <Field label="Country" name="country" placeholder="United States" />
       </div>
 
       <button type="submit" className="btn-primary mt-6 w-full justify-center" disabled={loading}>
