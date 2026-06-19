@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #0f1117;
+    color: #e6edf3;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #30363d #161b22;
+  }
+
+  *::-webkit-scrollbar       { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-track { background: #161b22; }
+  *::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface-card border border-surface-border rounded-xl p-5;
+  }
+
+  .label {
+    @apply text-xs font-medium text-slate-400 uppercase tracking-wider;
+  }
+
+  .metric-value {
+    @apply text-2xl font-semibold tabular-nums;
+  }
+
+  .btn-primary {
+    @apply bg-brand-500 hover:bg-brand-400 text-white font-medium px-5 py-2.5 rounded-lg
+           transition-colors duration-150 text-sm flex items-center gap-2;
+  }
+
+  .btn-ghost {
+    @apply border border-surface-border hover:border-slate-500 text-slate-400 hover:text-slate-200
+           font-medium px-4 py-2 rounded-lg transition-colors duration-150 text-sm flex items-center gap-2;
+  }
+
+  .input {
+    @apply bg-surface-raised border border-surface-border rounded-lg px-3.5 py-2.5 text-sm
+           text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1
+           focus:ring-brand-500 focus:border-brand-500 transition-colors w-full;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #161b22 25%, #1c2330 50%, #161b22 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
